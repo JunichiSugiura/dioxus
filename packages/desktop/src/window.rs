@@ -1,8 +1,8 @@
 use crate::{
-    context::{DesktopContext, ProxyType},
+    context::{ProxyType, UiContext},
     event::{trigger_from_serialized, IpcMessage, KeyboardEvent, UIEvent, WindowEvent},
     protocol,
-    setting::DioxusDesktopSettings,
+    setting::DioxusSettings,
 };
 use bevy::{
     ecs::world::WorldCell,
@@ -279,8 +279,7 @@ impl DioxusWindows {
         let ui_rx = world.get_resource::<Receiver<UICommand>>().unwrap().clone();
 
         let (dom_tx, dom_rx) = mpsc::unbounded::<SchedulerMsg>();
-        let context =
-            DesktopContext::<CoreCommand, UICommand>::new(proxy.clone(), (core_tx, ui_rx));
+        let context = UiContext::<CoreCommand, UICommand>::new(proxy.clone(), (core_tx, ui_rx));
         let edit_queue = Arc::new(Mutex::new(Vec::new()));
 
         let dom_tx_clone = dom_tx.clone();
@@ -334,7 +333,7 @@ impl DioxusWindows {
     where
         CoreCommand: 'static + Send + Sync + Clone + Debug,
     {
-        let mut settings = world.get_non_send_mut::<DioxusDesktopSettings>().unwrap();
+        let mut settings = world.get_non_send_mut::<DioxusSettings>().unwrap();
         let is_ready = Arc::new(AtomicBool::new(false));
 
         let file_drop_handler = settings.file_drop_handler.take();

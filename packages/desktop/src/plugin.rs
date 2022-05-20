@@ -4,7 +4,7 @@ use crate::{
         DomUpdated, MaximizeToggled, UIEvent, WindowDragged, WindowMaximized, WindowMinimized,
     },
     runner::runner,
-    setting::DioxusDesktopSettings,
+    setting::DioxusSettings,
     window::DioxusWindows,
 };
 use bevy::{
@@ -27,14 +27,14 @@ use wry::application::{
     window::Fullscreen,
 };
 
-pub struct DioxusDesktopPlugin<CoreCommand, UICommand, Props = ()> {
+pub struct DioxusPlugin<CoreCommand, UICommand, Props = ()> {
     pub root: DioxusComponent<Props>,
     pub props: Props,
     core_cmd_type: PhantomData<CoreCommand>,
     ui_cmd_type: PhantomData<UICommand>,
 }
 
-impl<CoreCommand, UICommand, Props> Plugin for DioxusDesktopPlugin<CoreCommand, UICommand, Props>
+impl<CoreCommand, UICommand, Props> Plugin for DioxusPlugin<CoreCommand, UICommand, Props>
 where
     CoreCommand: 'static + Send + Sync + Clone + Debug,
     UICommand: 'static + Send + Sync + Clone + Debug,
@@ -47,7 +47,7 @@ where
         let (ui_tx, ui_rx) = channel::<UICommand>(8);
         let settings = app
             .world
-            .remove_non_send_resource::<DioxusDesktopSettings>()
+            .remove_non_send_resource::<DioxusSettings>()
             .unwrap_or_default();
 
         let event_loop = EventLoop::<UIEvent<CoreCommand>>::with_user_event();
@@ -82,7 +82,7 @@ where
     }
 }
 
-impl<CoreCommand, UICommand, Props> DioxusDesktopPlugin<CoreCommand, UICommand, Props> {
+impl<CoreCommand, UICommand, Props> DioxusPlugin<CoreCommand, UICommand, Props> {
     fn handle_initial_window_events(world: &mut World)
     where
         CoreCommand: 'static + Send + Sync + Clone + Debug,
@@ -109,7 +109,7 @@ impl<CoreCommand, UICommand, Props> DioxusDesktopPlugin<CoreCommand, UICommand, 
     }
 }
 
-impl<CoreCommand, UICommand, Props> DioxusDesktopPlugin<CoreCommand, UICommand, Props> {
+impl<CoreCommand, UICommand, Props> DioxusPlugin<CoreCommand, UICommand, Props> {
     pub fn new(root: DioxusComponent<Props>, props: Props) -> Self {
         Self {
             root,

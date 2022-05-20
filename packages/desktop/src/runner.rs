@@ -3,7 +3,7 @@ use crate::{
         DomUpdated, MaximizeToggled, UIEvent, WindowDragged, WindowEvent, WindowMaximized,
         WindowMinimized,
     },
-    setting::{DioxusDesktopSettings, UpdateMode},
+    setting::{DioxusSettings, UpdateMode},
     window::DioxusWindows,
 };
 use bevy::{
@@ -62,7 +62,7 @@ where
               control_flow: &mut ControlFlow| {
             match event {
                 Event::NewEvents(start) => {
-                    let dioxus_settings = app.world.non_send_resource::<DioxusDesktopSettings>();
+                    let dioxus_settings = app.world.non_send_resource::<DioxusSettings>();
                     let windows = app.world.resource::<Windows>();
                     let focused = windows.iter().any(|w| w.is_focused());
                     let auto_timeout_reached =
@@ -402,7 +402,7 @@ where
                 }
                 Event::MainEventsCleared => {
                     handle_create_window_events::<CoreCommand, UICommand, Props>(&mut app.world);
-                    let dioxus_settings = app.world.non_send_resource::<DioxusDesktopSettings>();
+                    let dioxus_settings = app.world.non_send_resource::<DioxusSettings>();
                     let update = if tao_state.active {
                         let windows = app.world.resource::<Windows>();
                         let focused = windows.iter().any(|w| w.is_focused());
@@ -425,8 +425,7 @@ where
                 }
                 Event::RedrawEventsCleared => {
                     {
-                        let dioxus_settings =
-                            app.world.non_send_resource::<DioxusDesktopSettings>();
+                        let dioxus_settings = app.world.non_send_resource::<DioxusSettings>();
                         let windows = app.world.non_send_resource::<Windows>();
                         let focused = windows.iter().any(|w| w.is_focused());
                         let now = Instant::now();

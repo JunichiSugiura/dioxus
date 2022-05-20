@@ -11,7 +11,7 @@ use wry::{
     Result as WryResult,
 };
 
-pub struct DioxusDesktopSettings {
+pub struct DioxusSettings {
     pub focused_mode: UpdateMode,
     pub unfocused_mode: UpdateMode,
 
@@ -32,7 +32,7 @@ pub type WryProtocol = (
 
 pub type DynEventHandlerFn = dyn Fn(&mut EventLoop<()>, &mut WebView);
 
-impl Debug for DioxusDesktopSettings {
+impl Debug for DioxusSettings {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("DioxusWindows")
             .field("focused_mode", &self.focused_mode)
@@ -41,9 +41,9 @@ impl Debug for DioxusDesktopSettings {
     }
 }
 
-impl DioxusDesktopSettings {
+impl DioxusSettings {
     pub fn game() -> Self {
-        DioxusDesktopSettings {
+        DioxusSettings {
             focused_mode: UpdateMode::Continuous,
             unfocused_mode: UpdateMode::Continuous,
             ..Default::default()
@@ -107,9 +107,9 @@ impl DioxusDesktopSettings {
     }
 }
 
-impl Default for DioxusDesktopSettings {
+impl Default for DioxusSettings {
     fn default() -> Self {
-        DioxusDesktopSettings {
+        DioxusSettings {
             focused_mode: UpdateMode::Reactive {
                 max_wait: Duration::from_secs(5),
             },

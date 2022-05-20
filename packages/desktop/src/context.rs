@@ -6,12 +6,12 @@ use wry::application::event_loop::EventLoopProxy;
 pub type ProxyType<CoreCommand> = EventLoopProxy<UIEvent<CoreCommand>>;
 
 #[derive(Clone)]
-pub struct DesktopContext<CoreCommand: Debug + 'static + Clone, UICommand: 'static + Clone> {
+pub struct UiContext<CoreCommand: Debug + 'static + Clone, UICommand: 'static + Clone> {
     proxy: ProxyType<CoreCommand>,
     channel: (Sender<CoreCommand>, Receiver<UICommand>),
 }
 
-impl<CoreCommand, UICommand> DesktopContext<CoreCommand, UICommand>
+impl<CoreCommand, UICommand> UiContext<CoreCommand, UICommand>
 where
     CoreCommand: Debug + Clone,
     UICommand: Debug + Clone,

@@ -1,15 +1,15 @@
-use crate::context::DesktopContext;
+use crate::context::UiContext;
 use dioxus_core::*;
 use std::fmt::Debug;
 
 pub fn use_bevy_window<CoreCommand, UICommand>(
     cx: &ScopeState,
-) -> &DesktopContext<CoreCommand, UICommand>
+) -> &UiContext<CoreCommand, UICommand>
 where
     CoreCommand: Debug + Clone,
     UICommand: Clone + 'static,
 {
-    cx.use_hook(|_| cx.consume_context::<DesktopContext<CoreCommand, UICommand>>())
+    cx.use_hook(|_| cx.consume_context::<UiContext<CoreCommand, UICommand>>())
         .as_ref()
         .unwrap()
 }
