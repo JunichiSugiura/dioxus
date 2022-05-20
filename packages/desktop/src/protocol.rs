@@ -12,7 +12,9 @@ const MODULE_LOADER: &str = r#"
 </script>
 "#;
 
-pub fn desktop_handler(
+pub static INTERPRETER_JS: &str = include_str!("./interpreter.js");
+
+pub fn handler(
     request: &Request,
     asset_root: Option<PathBuf>,
     custom_head: Option<String>,
@@ -48,7 +50,7 @@ pub fn desktop_handler(
     } else if trimmed == "index.js" {
         ResponseBuilder::new()
             .mimetype("text/javascript")
-            .body(dioxus_interpreter_js::INTERPRETER_JS.as_bytes().to_vec())
+            .body(INTERPRETER_JS.as_bytes().to_vec())
     } else {
         let asset_root = asset_root
             .unwrap_or_else(|| get_asset_root().unwrap_or_else(|| Path::new(".").to_path_buf()))
@@ -80,23 +82,10 @@ pub fn desktop_handler(
 
 #[allow(unreachable_code)]
 fn get_asset_root() -> Option<PathBuf> {
-    /*
-    We're matching exactly how cargo-bundle works.
-
-    - [x] macOS
-    - [ ] Windows
-    - [ ] Linux (rpm)
-    - [ ] Linux (deb)
-    - [ ] iOS
-    - [ ] Android
-
-    */
-
     if std::env::var_os("CARGO").is_some() {
         return None;
     }
 
-    // TODO: support for other platforms
     #[cfg(target_os = "macos")]
     {
         let bundle = core_foundation::bundle::CFBundle::main_bundle();
