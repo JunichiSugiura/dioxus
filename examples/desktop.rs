@@ -21,7 +21,7 @@ enum CoreCommand {
 }
 
 #[derive(Debug, Clone)]
-enum UICommand {
+enum UiCommand {
     Test,
     KeyboardInput(KeyboardInput),
 }
@@ -40,7 +40,7 @@ fn main() {
             title: "Bevy Dioxus Plugin Demo".to_string(),
             ..Default::default()
         })
-        .add_plugin(DioxusPlugin::<CoreCommand, UICommand>::new(app, ()))
+        .add_plugin(DioxusPlugin::<CoreCommand, UiCommand>::new(app, ()))
         .add_plugin(LogPlugin)
         .add_system(send_keyboard_input)
         .add_system(handle_core_command)
@@ -52,19 +52,19 @@ fn main() {
         .run();
 }
 
-fn handle_core_command(mut events: EventReader<CoreCommand>, mut ui: EventWriter<UICommand>) {
+fn handle_core_command(mut events: EventReader<CoreCommand>, mut ui: EventWriter<UiCommand>) {
     for cmd in events.iter() {
         info!("🧠 {:?}", cmd);
 
         match cmd {
-            CoreCommand::Test => ui.send(UICommand::Test),
+            CoreCommand::Test => ui.send(UiCommand::Test),
         }
     }
 }
 
-fn send_keyboard_input(mut events: EventReader<KeyboardInput>, mut event: EventWriter<UICommand>) {
+fn send_keyboard_input(mut events: EventReader<KeyboardInput>, mut event: EventWriter<UiCommand>) {
     for input in events.iter() {
-        event.send(UICommand::KeyboardInput(input.clone()));
+        event.send(UiCommand::KeyboardInput(input.clone()));
     }
 }
 
@@ -82,7 +82,7 @@ fn log_keyboard_event(
 }
 
 fn app(cx: Scope) -> Element {
-    let window = use_bevy_window::<CoreCommand, UICommand>(&cx);
+    let window = use_bevy_window::<CoreCommand, UiCommand>(&cx);
     let input = use_state(&cx, || None);
     let state = use_state(&cx, || None);
 
@@ -94,7 +94,7 @@ fn app(cx: Scope) -> Element {
         async move {
             while let Some(cmd) = rx.receive().await {
                 match cmd {
-                    UICommand::KeyboardInput(i) => {
+                    UiCommand::KeyboardInput(i) => {
                         input.set(i.key_code);
                         state.set(Some(i.state));
                     }

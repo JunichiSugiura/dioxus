@@ -1,6 +1,6 @@
 use crate::{
     context::{ProxyType, UiContext},
-    event::{trigger_from_serialized, IpcMessage, KeyboardEvent, UIEvent, WindowEvent},
+    event::{trigger_from_serialized, IpcMessage, KeyboardEvent, UiEvent, WindowEvent},
     protocol,
     setting::DioxusSettings,
 };
@@ -73,7 +73,7 @@ impl DioxusWindows {
         self.tao_to_window_id.get(&id).cloned()
     }
 
-    pub fn create<CoreCommand, UICommand, Props>(
+    pub fn create<CoreCommand, UiCommand, Props>(
         &mut self,
         world: &WorldCell,
         window_id: WindowId,
@@ -81,11 +81,11 @@ impl DioxusWindows {
     ) -> BevyWindow
     where
         CoreCommand: 'static + Send + Sync + Clone + Debug,
-        UICommand: 'static + Send + Sync + Clone + Debug,
+        UiCommand: 'static + Send + Sync + Clone + Debug,
         Props: 'static + Send + Sync + Copy,
     {
         let event_loop = world
-            .get_non_send_mut::<EventLoop<UIEvent<CoreCommand>>>()
+            .get_non_send_mut::<EventLoop<UiEvent<CoreCommand>>>()
             .unwrap();
         let proxy = event_loop.create_proxy();
 
@@ -94,7 +94,7 @@ impl DioxusWindows {
 
         let bevy_window = Self::create_bevy_window(window_id, &tao_window, &window_descriptor);
         let (dom_tx, edit_queue) =
-            Self::spawn_virtual_dom::<CoreCommand, UICommand, Props>(world, proxy.clone());
+            Self::spawn_virtual_dom::<CoreCommand, UiCommand, Props>(world, proxy.clone());
         let (webview, is_ready) =
             Self::create_webview(world, window_descriptor, tao_window, proxy, dom_tx.clone());
 
@@ -152,7 +152,7 @@ impl DioxusWindows {
     }
 
     fn create_tao_window<CoreCommand>(
-        event_loop: &EventLoop<UIEvent<CoreCommand>>,
+        event_loop: &EventLoop<UiEvent<CoreCommand>>,
         window_descriptor: &WindowDescriptor,
     ) -> TaoWindow
     where
@@ -261,13 +261,13 @@ impl DioxusWindows {
         )
     }
 
-    fn spawn_virtual_dom<CoreCommand, UICommand, Props>(
+    fn spawn_virtual_dom<CoreCommand, UiCommand, Props>(
         world: &WorldCell,
         proxy: ProxyType<CoreCommand>,
     ) -> (mpsc::UnboundedSender<SchedulerMsg>, Arc<Mutex<Vec<String>>>)
     where
         CoreCommand: 'static + Send + Sync + Clone + Debug,
-        UICommand: 'static + Send + Sync + Clone + Debug,
+        UiCommand: 'static + Send + Sync + Clone + Debug,
         Props: 'static + Send + Sync + Copy,
     {
         let root = world
@@ -276,10 +276,10 @@ impl DioxusWindows {
             .clone();
         let props = world.get_resource::<Props>().unwrap().clone();
         let core_tx = world.get_resource::<Sender<CoreCommand>>().unwrap().clone();
-        let ui_rx = world.get_resource::<Receiver<UICommand>>().unwrap().clone();
+        let ui_rx = world.get_resource::<Receiver<UiCommand>>().unwrap().clone();
 
         let (dom_tx, dom_rx) = mpsc::unbounded::<SchedulerMsg>();
-        let context = UiContext::<CoreCommand, UICommand>::new(proxy.clone(), (core_tx, ui_rx));
+        let context = UiContext::<CoreCommand, UiCommand>::new(proxy.clone(), (core_tx, ui_rx));
         let edit_queue = Arc::new(Mutex::new(Vec::new()));
 
         let dom_tx_clone = dom_tx.clone();
@@ -300,7 +300,7 @@ impl DioxusWindows {
                     .push(serde_json::to_string(&edits.edits).unwrap());
 
                 proxy
-                    .send_event(UIEvent::WindowEvent(WindowEvent::Update))
+                    .send_event(UiEvent::WindowEvent(WindowEvent::Update))
                     .unwrap();
 
                 loop {
@@ -315,7 +315,7 @@ impl DioxusWindows {
                             .push(serde_json::to_string(&edit.edits).unwrap());
                     }
 
-                    let _ = proxy.send_event(UIEvent::WindowEvent(WindowEvent::Update));
+                    let _ = proxy.send_event(UiEvent::WindowEvent(WindowEvent::Update));
                 }
             });
         });
@@ -356,11 +356,11 @@ impl DioxusWindows {
                         }
                         "keyboard_event" => {
                             let event = KeyboardEvent::from_value(message.params());
-                            proxy.send_event(UIEvent::KeyboardEvent(event)).unwrap();
+                            proxy.send_event(UiEvent::KeyboardEvent(event)).unwrap();
                         }
                         "initialize" => {
                             is_ready_clone.store(true, std::sync::atomic::Ordering::Relaxed);
-                            let _ = proxy.send_event(UIEvent::WindowEvent(WindowEvent::Update));
+                            let _ = proxy.send_event(UiEvent::WindowEvent(WindowEvent::Update));
                         }
                         "browser_open" => {
                             let data = message.params();

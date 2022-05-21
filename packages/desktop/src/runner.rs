@@ -1,6 +1,6 @@
 use crate::{
     event::{
-        DomUpdated, MaximizeToggled, UIEvent, WindowDragged, WindowEvent, WindowMaximized,
+        DomUpdated, MaximizeToggled, UiEvent, WindowDragged, WindowEvent, WindowMaximized,
         WindowMinimized,
     },
     setting::{DioxusSettings, UpdateMode},
@@ -31,15 +31,15 @@ use wry::application::{
     event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget},
 };
 
-pub fn runner<CoreCommand, UICommand, Props>(mut app: App)
+pub fn runner<CoreCommand, UiCommand, Props>(mut app: App)
 where
     CoreCommand: 'static + Send + Sync + Clone + Debug,
-    UICommand: 'static + Send + Sync + Clone + Debug,
+    UiCommand: 'static + Send + Sync + Clone + Debug,
     Props: 'static + Send + Sync + Copy,
 {
     let event_loop = app
         .world
-        .remove_non_send_resource::<EventLoop<UIEvent<CoreCommand>>>()
+        .remove_non_send_resource::<EventLoop<UiEvent<CoreCommand>>>()
         .unwrap();
     let core_rx = app
         .world
@@ -52,13 +52,13 @@ where
 
     runtime.spawn(async move {
         while let Some(cmd) = core_rx.receive().await {
-            proxy.clone().send_event(UIEvent::CoreCommand(cmd)).unwrap();
+            proxy.clone().send_event(UiEvent::CoreCommand(cmd)).unwrap();
         }
     });
 
     event_loop.run(
-        move |event: Event<UIEvent<CoreCommand>>,
-              _event_loop: &EventLoopWindowTarget<UIEvent<CoreCommand>>,
+        move |event: Event<UiEvent<CoreCommand>>,
+              _event_loop: &EventLoopWindowTarget<UiEvent<CoreCommand>>,
               control_flow: &mut ControlFlow| {
             match event {
                 Event::NewEvents(start) => {
@@ -244,7 +244,7 @@ where
                     }
                 }
                 Event::UserEvent(user_event) => match user_event {
-                    UIEvent::WindowEvent(window_event) => {
+                    UiEvent::WindowEvent(window_event) => {
                         let world = app.world.cell();
                         let mut windows = world.get_non_send_mut::<Windows>().unwrap();
                         let window = windows.get_primary_mut().unwrap();
@@ -359,14 +359,14 @@ where
                             }
                         };
                     }
-                    UIEvent::CoreCommand(cmd) => {
+                    UiEvent::CoreCommand(cmd) => {
                         let mut events = app
                             .world
                             .get_resource_mut::<Events<CoreCommand>>()
                             .expect("Provide CoreCommand event to bevy");
                         events.send(cmd);
                     }
-                    UIEvent::KeyboardEvent(event) => {
+                    UiEvent::KeyboardEvent(event) => {
                         let mut keyboard_input_events = app
                             .world
                             .get_resource_mut::<Events<KeyboardInput>>()
@@ -401,7 +401,7 @@ where
                     tao_state.active = true;
                 }
                 Event::MainEventsCleared => {
-                    handle_create_window_events::<CoreCommand, UICommand, Props>(&mut app.world);
+                    handle_create_window_events::<CoreCommand, UiCommand, Props>(&mut app.world);
                     let dioxus_settings = app.world.non_send_resource::<DioxusSettings>();
                     let update = if tao_state.active {
                         let windows = app.world.resource::<Windows>();
@@ -462,10 +462,10 @@ where
     );
 }
 
-fn handle_create_window_events<CoreCommand, UICommand, Props>(world: &mut World)
+fn handle_create_window_events<CoreCommand, UiCommand, Props>(world: &mut World)
 where
     CoreCommand: 'static + Send + Sync + Clone + Debug,
-    UICommand: 'static + Send + Sync + Clone + Debug,
+    UiCommand: 'static + Send + Sync + Clone + Debug,
     Props: 'static + Send + Sync + Copy,
 {
     let world = world.cell();
@@ -476,7 +476,7 @@ where
     let mut window_created_events = world.get_resource_mut::<Events<WindowCreated>>().unwrap();
 
     for create_window_event in create_window_events_reader.iter(&create_window_events) {
-        let window = dioxus_windows.create::<CoreCommand, UICommand, Props>(
+        let window = dioxus_windows.create::<CoreCommand, UiCommand, Props>(
             &world,
             create_window_event.id,
             &create_window_event.descriptor,

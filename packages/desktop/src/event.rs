@@ -10,7 +10,7 @@ use serde_repr::*;
 use std::fmt::Debug;
 
 #[derive(Debug)]
-pub enum UIEvent<CoreCommand: Debug> {
+pub enum UiEvent<CoreCommand: Debug> {
     WindowEvent(WindowEvent),
     CoreCommand(CoreCommand),
     KeyboardEvent(KeyboardEvent),

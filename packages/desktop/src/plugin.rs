@@ -1,7 +1,7 @@
 use crate::{
     converter,
     event::{
-        DomUpdated, MaximizeToggled, UIEvent, WindowDragged, WindowMaximized, WindowMinimized,
+        DomUpdated, MaximizeToggled, UiEvent, WindowDragged, WindowMaximized, WindowMinimized,
     },
     runner::runner,
     setting::DioxusSettings,
@@ -27,35 +27,35 @@ use wry::application::{
     window::Fullscreen,
 };
 
-pub struct DioxusPlugin<CoreCommand, UICommand, Props = ()> {
+pub struct DioxusPlugin<CoreCommand, UiCommand, Props = ()> {
     pub root: DioxusComponent<Props>,
     pub props: Props,
     core_cmd_type: PhantomData<CoreCommand>,
-    ui_cmd_type: PhantomData<UICommand>,
+    ui_cmd_type: PhantomData<UiCommand>,
 }
 
-impl<CoreCommand, UICommand, Props> Plugin for DioxusPlugin<CoreCommand, UICommand, Props>
+impl<CoreCommand, UiCommand, Props> Plugin for DioxusPlugin<CoreCommand, UiCommand, Props>
 where
     CoreCommand: 'static + Send + Sync + Clone + Debug,
-    UICommand: 'static + Send + Sync + Clone + Debug,
+    UiCommand: 'static + Send + Sync + Clone + Debug,
     Props: 'static + Send + Sync + Copy,
 {
     fn build(&self, app: &mut App) {
         let runtime = Runtime::new().unwrap();
 
         let (core_tx, core_rx) = channel::<CoreCommand>(8);
-        let (ui_tx, ui_rx) = channel::<UICommand>(8);
+        let (ui_tx, ui_rx) = channel::<UiCommand>(8);
         let settings = app
             .world
             .remove_non_send_resource::<DioxusSettings>()
             .unwrap_or_default();
 
-        let event_loop = EventLoop::<UIEvent<CoreCommand>>::with_user_event();
+        let event_loop = EventLoop::<UiEvent<CoreCommand>>::with_user_event();
 
         app.add_plugin(InputPlugin)
             .add_plugin(WindowPlugin::default())
             .add_event::<CoreCommand>()
-            .add_event::<UICommand>()
+            .add_event::<UiCommand>()
             .add_event::<DomUpdated>()
             .add_event::<WindowDragged>()
             .add_event::<WindowMinimized>()
@@ -70,9 +70,9 @@ where
             .insert_resource(self.props)
             .insert_non_send_resource(settings)
             .init_non_send_resource::<DioxusWindows>()
-            .set_runner(|app| runner::<CoreCommand, UICommand, Props>(app))
+            .set_runner(|app| runner::<CoreCommand, UiCommand, Props>(app))
             .insert_non_send_resource(event_loop)
-            .add_system_to_stage(CoreStage::Last, send_ui_commands::<UICommand>)
+            .add_system_to_stage(CoreStage::Last, send_ui_commands::<UiCommand>)
             .add_system_to_stage(
                 CoreStage::PostUpdate,
                 change_window, /* TODO.label(ModifiesWindows) // is recentry introduced ( > 0.7 ) */
@@ -82,11 +82,11 @@ where
     }
 }
 
-impl<CoreCommand, UICommand, Props> DioxusPlugin<CoreCommand, UICommand, Props> {
+impl<CoreCommand, UiCommand, Props> DioxusPlugin<CoreCommand, UiCommand, Props> {
     fn handle_initial_window_events(world: &mut World)
     where
         CoreCommand: 'static + Send + Sync + Clone + Debug,
-        UICommand: 'static + Send + Sync + Clone + Debug,
+        UiCommand: 'static + Send + Sync + Clone + Debug,
         Props: 'static + Send + Sync + Copy,
     {
         let world = world.cell();
@@ -96,7 +96,7 @@ impl<CoreCommand, UICommand, Props> DioxusPlugin<CoreCommand, UICommand, Props> 
         let mut window_created_events = world.get_resource_mut::<Events<WindowCreated>>().unwrap();
 
         for create_window_event in create_window_events.drain() {
-            let window = dioxus_windows.create::<CoreCommand, UICommand, Props>(
+            let window = dioxus_windows.create::<CoreCommand, UiCommand, Props>(
                 &world,
                 create_window_event.id,
                 &create_window_event.descriptor,
@@ -109,7 +109,7 @@ impl<CoreCommand, UICommand, Props> DioxusPlugin<CoreCommand, UICommand, Props> 
     }
 }
 
-impl<CoreCommand, UICommand, Props> DioxusPlugin<CoreCommand, UICommand, Props> {
+impl<CoreCommand, UiCommand, Props> DioxusPlugin<CoreCommand, UiCommand, Props> {
     pub fn new(root: DioxusComponent<Props>, props: Props) -> Self {
         Self {
             root,
@@ -120,13 +120,13 @@ impl<CoreCommand, UICommand, Props> DioxusPlugin<CoreCommand, UICommand, Props> 
     }
 }
 
-fn send_ui_commands<UICommand>(mut events: EventReader<UICommand>, tx: Res<Sender<UICommand>>)
+fn send_ui_commands<UiCommand>(mut events: EventReader<UiCommand>, tx: Res<Sender<UiCommand>>)
 where
-    UICommand: 'static + Send + Sync + Clone,
+    UiCommand: 'static + Send + Sync + Clone,
 {
     for e in events.iter() {
         if let Err(_) = tx.try_send(e.clone()) {
-            error!("Failed to send UICommand");
+            error!("Failed to send UiCommand");
         };
     }
 }
